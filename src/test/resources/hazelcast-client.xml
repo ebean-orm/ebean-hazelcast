@@ -1,0 +1,8 @@
+<network>
+  <cluster-members>
+    <address>127.0.0.1</address>
+    <address>127.0.0.2</address>
+  </cluster-members>
+  <smart-routing>true</smart-routing>
+  <redo-operation>true</redo-operation>
+</network>
