@@ -27,13 +27,11 @@
     <appender-ref ref="STDOUT"/>
   </root>
 
-  <!--<logger name="com.avaje.ebeaninternal.server.cluster" level="TRACE"/>-->
-
-  <logger name="org.avaje.ebean.Cluster" level="TRACE"/>
-
   <logger name="org.avaje.ebean.SQL" level="TRACE"/>
   <logger name="org.avaje.ebean.TXN" level="TRACE"/>
   <logger name="org.avaje.ebean.SUM" level="TRACE"/>
+
+  <logger name="org.avaje.ebean.cache.HzCacheFactory" level="TRACE"/>
 
   <logger name="org.avaje.ebean.cache.QUERY" level="TRACE"/>
   <logger name="org.avaje.ebean.cache.BEAN" level="TRACE"/>

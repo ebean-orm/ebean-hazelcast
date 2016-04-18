@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config http://www.hazelcast.com/hazelcast-config-3.6.xsd"
+           xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <cache name="foo">
+    <backup-count>0</backup-count>
+  </cache>
+
+  <network>
+  </network>
+
+  <map name="default">
+    <in-memory-format>BINARY</in-memory-format>
+    <backup-count>0</backup-count>
+    <async-backup-count>0</async-backup-count>
+    <time-to-live-seconds>0</time-to-live-seconds>
+    <max-idle-seconds>0</max-idle-seconds>
+    <eviction-policy>NONE</eviction-policy>
+    <max-size policy="PER_NODE">0</max-size>
+  </map>
+
+</hazelcast>
