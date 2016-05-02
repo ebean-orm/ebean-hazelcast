@@ -1,12 +1,11 @@
 package org.avaje.ebeanorm.hazelcast;
 
-import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.BackgroundExecutor;
 import com.avaje.ebean.cache.ServerCache;
 import com.avaje.ebean.cache.ServerCacheFactory;
 import com.avaje.ebean.cache.ServerCacheOptions;
 import com.avaje.ebean.cache.ServerCacheType;
 import com.avaje.ebean.config.ServerConfig;
-import com.avaje.ebean.plugin.SpiServer;
 import com.avaje.ebeaninternal.server.cache.DefaultServerCache;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
@@ -14,7 +13,6 @@ import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import com.hazelcast.core.ISet;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
@@ -36,38 +34,24 @@ public class HzCacheFactory implements ServerCacheFactory {
 
   private final ConcurrentHashMap<String,HzQueryCache> queryCaches;
 
-  private HazelcastInstance instance;
+  private final HazelcastInstance instance;
 
   /**
    * Topic used to broadcast query cache invalidation.
    */
-  private ITopic<String> queryCacheInvalidation;
+  private final ITopic<String> queryCacheInvalidation;
 
-  /**
-   * Topic used to broadcast query cache creation.
-   */
-  private ITopic<String> queryCacheCreated;
+  private final BackgroundExecutor executor;
 
-  private SpiServer pluginServer;
+  public HzCacheFactory(ServerConfig serverConfig, BackgroundExecutor executor) {
 
-  /**
-   * The set of query cache names.
-   */
-  private ISet<String> queryCacheNames;
+    this.executor = executor;
+    this.queryCaches = new ConcurrentHashMap<String, HzQueryCache>();
 
-  public HzCacheFactory() {
-    queryCaches = new ConcurrentHashMap<String, HzQueryCache>();
-  }
-
-  @Override
-  public void init(EbeanServer ebeanServer) {
-
-    pluginServer = ebeanServer.getPluginApi();
     if (System.getProperty("hazelcast.logging.type") == null) {
       System.setProperty("hazelcast.logging.type", "slf4j");
     }
 
-    ServerConfig serverConfig = pluginServer.getServerConfig();
     Object configuration = serverConfig.getServiceObject("hazelcastConfiguration");
     if (configuration != null) {
       // explicit configuration probably set via DI
@@ -87,14 +71,6 @@ public class HzCacheFactory implements ServerCacheFactory {
       }
     }
 
-    queryCacheNames = instance.getSet("queryCacheNames");
-    queryCacheCreated = instance.getReliableTopic("queryCacheCreated");
-    queryCacheCreated.addMessageListener(new MessageListener<String>() {
-      @Override
-      public void onMessage(Message<String> message) {
-        processQueryCacheCreated(message.getMessageObject());
-      }
-    });
     queryCacheInvalidation = instance.getReliableTopic("queryCacheInvalidation");
     queryCacheInvalidation.addMessageListener(new MessageListener<String>() {
       @Override
@@ -102,8 +78,6 @@ public class HzCacheFactory implements ServerCacheFactory {
         processInvalidation(message.getMessageObject());
       }
     });
-
-    registerExistingQueryCaches();
   }
 
   /**
@@ -111,29 +85,6 @@ public class HzCacheFactory implements ServerCacheFactory {
    */
   private boolean isServerMode(Properties properties) {
     return properties != null && properties.getProperty("ebean.hazelcast.servermode","").equals("true");
-  }
-
-  /**
-   * Register the existing query caches held in the cluster.
-   */
-  private void registerExistingQueryCaches() {
-    for (String key : queryCacheNames) {
-      try {
-        logger.trace("init query cache for {}", key);
-        pluginServer.initQueryCache(key);
-      } catch (Exception e) {
-        logger.error("Failed to initiate query cache for " + key, e);
-      }
-    }
-  }
-
-  /**
-   * Send the query cache created message to all members of the cluster.
-   */
-  private void sendQueryCacheCreated(String key) {
-    logger.trace("send query cache created key[{}] ", key);
-    queryCacheNames.add(key);
-    queryCacheCreated.publish(key);
   }
 
   @Override
@@ -162,8 +113,8 @@ public class HzCacheFactory implements ServerCacheFactory {
       if (cache == null) {
         logger.debug("create query cache [{}]", key);
         cache = new HzQueryCache(key, options);
+        cache.periodicTrim(executor);
         queryCaches.put(key, cache);
-        sendQueryCacheCreated(key);
       }
       return cache;
     }
@@ -209,10 +160,4 @@ public class HzCacheFactory implements ServerCacheFactory {
     }
   }
 
-  /**
-   * Process a remote query cache creation.
-   */
-  private void processQueryCacheCreated(String cacheName) {
-    pluginServer.initQueryCache(cacheName);
-  }
 }

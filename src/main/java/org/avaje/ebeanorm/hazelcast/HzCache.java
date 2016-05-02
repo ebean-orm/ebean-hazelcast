@@ -1,8 +1,6 @@
 package org.avaje.ebeanorm.hazelcast;
 
-import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.cache.ServerCache;
-import com.avaje.ebean.cache.ServerCacheOptions;
 import com.avaje.ebean.cache.ServerCacheStatistics;
 import com.hazelcast.core.IMap;
 
@@ -40,22 +38,6 @@ class HzCache implements ServerCache {
   @Override
   public int size() {
     return map.size();
-  }
-
-
-  @Override
-  public void init(EbeanServer ebeanServer) {
-    // don't need it
-  }
-
-  @Override
-  public ServerCacheOptions getOptions() {
-    return null;
-  }
-
-  @Override
-  public void setOptions(ServerCacheOptions options) {
-
   }
 
   @Override
