@@ -52,23 +52,11 @@ public class HzCacheFactory implements ServerCacheFactory {
       System.setProperty("hazelcast.logging.type", "slf4j");
     }
 
-    Object configuration = serverConfig.getServiceObject("hazelcastConfiguration");
-    if (configuration != null) {
-      // explicit configuration probably set via DI
-      if (configuration instanceof ClientConfig) {
-        instance = HazelcastClient.newHazelcastClient((ClientConfig)configuration);
-      } else if (configuration instanceof Config) {
-        instance = Hazelcast.newHazelcastInstance((Config)configuration);
-      } else {
-        throw new IllegalArgumentException("Invalid Hazelcast configuration type "+configuration.getClass());
-      }
+    Object hazelcastInstance = serverConfig.getServiceObject("hazelcast");
+    if (hazelcastInstance != null) {
+      instance = (HazelcastInstance)hazelcastInstance;
     } else {
-      // implicit configuration via hazelcast-client.xml or hazelcast.xml
-      if (isServerMode(serverConfig.getProperties())) {
-        instance = Hazelcast.newHazelcastInstance();
-      } else {
-        instance = HazelcastClient.newHazelcastClient();
-      }
+      instance = createInstance(serverConfig);
     }
 
     queryCacheInvalidation = instance.getReliableTopic("queryCacheInvalidation");
@@ -78,6 +66,30 @@ public class HzCacheFactory implements ServerCacheFactory {
         processInvalidation(message.getMessageObject());
       }
     });
+  }
+
+  /**
+   * Create a new HazelcastInstance based on configuration from serverConfig.
+   */
+  private HazelcastInstance createInstance(ServerConfig serverConfig) {
+    Object configuration = serverConfig.getServiceObject("hazelcastConfiguration");
+    if (configuration != null) {
+      // explicit configuration probably set via DI
+      if (configuration instanceof ClientConfig) {
+        return HazelcastClient.newHazelcastClient((ClientConfig) configuration);
+      } else if (configuration instanceof Config) {
+        return Hazelcast.newHazelcastInstance((Config) configuration);
+      } else {
+        throw new IllegalArgumentException("Invalid Hazelcast configuration type " + configuration.getClass());
+      }
+    } else {
+      // implicit configuration via hazelcast-client.xml or hazelcast.xml
+      if (isServerMode(serverConfig.getProperties())) {
+        return Hazelcast.newHazelcastInstance();
+      } else {
+        return HazelcastClient.newHazelcastClient();
+      }
+    }
   }
 
   /**
