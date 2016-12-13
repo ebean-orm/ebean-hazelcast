@@ -1,12 +1,12 @@
-package org.avaje.ebeanorm.hazelcast;
+package io.ebean.hazelcast;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.cache.ServerCache;
-import com.avaje.ebean.cache.ServerCacheManager;
-import com.avaje.ebean.cache.ServerCacheOptions;
-import com.avaje.ebean.cache.ServerCacheType;
-import com.avaje.ebean.config.ServerConfig;
+import io.ebean.Ebean;
+import io.ebean.EbeanServer;
+import io.ebean.cache.ServerCache;
+import io.ebean.cache.ServerCacheManager;
+import io.ebean.cache.ServerCacheOptions;
+import io.ebean.cache.ServerCacheType;
+import io.ebean.config.ServerConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import org.example.domain.EFoo;

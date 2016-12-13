@@ -1,7 +1,7 @@
-package org.avaje.ebeanorm.hazelcast;
+package io.ebean.hazelcast;
 
-import com.avaje.ebean.cache.ServerCache;
-import com.avaje.ebean.cache.ServerCacheStatistics;
+import io.ebean.cache.ServerCache;
+import io.ebean.cache.ServerCacheStatistics;
 import com.hazelcast.core.IMap;
 
 /**

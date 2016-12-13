@@ -1,9 +1,9 @@
-package org.avaje.ebeanorm.hazelcast;
+package io.ebean.hazelcast;
 
-import com.avaje.ebean.BackgroundExecutor;
-import com.avaje.ebean.cache.ServerCacheFactory;
-import com.avaje.ebean.cache.ServerCachePlugin;
-import com.avaje.ebean.config.ServerConfig;
+import io.ebean.BackgroundExecutor;
+import io.ebean.cache.ServerCacheFactory;
+import io.ebean.cache.ServerCachePlugin;
+import io.ebean.config.ServerConfig;
 
 /**
  * Creates the Hazelcast ServerCacheFactory implementation.
