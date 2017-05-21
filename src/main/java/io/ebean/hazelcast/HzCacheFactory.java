@@ -5,6 +5,7 @@ import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheFactory;
 import io.ebean.cache.ServerCacheOptions;
 import io.ebean.cache.ServerCacheType;
+import io.ebean.config.CurrentTenantProvider;
 import io.ebean.config.ServerConfig;
 import io.ebeaninternal.server.cache.DefaultServerCache;
 import com.hazelcast.client.HazelcastClient;
@@ -14,8 +15,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.ITopic;
-import com.hazelcast.core.Message;
-import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +27,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HzCacheFactory implements ServerCacheFactory {
 
   /**
-   * This explicitly uses the common "org.avaje.ebean.cache" namespace.
+   * This explicitly uses the common "io.ebean.cache" namespace.
    */
-  private static final Logger logger = LoggerFactory.getLogger("org.avaje.ebean.cache.HzCacheFactory");
+  private static final Logger logger = LoggerFactory.getLogger("io.ebean.cache.HzCacheFactory");
 
   private final ConcurrentHashMap<String,HzQueryCache> queryCaches;
 
@@ -46,7 +45,7 @@ public class HzCacheFactory implements ServerCacheFactory {
   public HzCacheFactory(ServerConfig serverConfig, BackgroundExecutor executor) {
 
     this.executor = executor;
-    this.queryCaches = new ConcurrentHashMap<String, HzQueryCache>();
+    this.queryCaches = new ConcurrentHashMap<>();
 
     if (System.getProperty("hazelcast.logging.type") == null) {
       System.setProperty("hazelcast.logging.type", "slf4j");
@@ -60,12 +59,7 @@ public class HzCacheFactory implements ServerCacheFactory {
     }
 
     queryCacheInvalidation = instance.getReliableTopic("queryCacheInvalidation");
-    queryCacheInvalidation.addMessageListener(new MessageListener<String>() {
-      @Override
-      public void onMessage(Message<String> message) {
-        processInvalidation(message.getMessageObject());
-      }
-    });
+    queryCacheInvalidation.addMessageListener(message -> processInvalidation(message.getMessageObject()));
   }
 
   /**
@@ -100,31 +94,31 @@ public class HzCacheFactory implements ServerCacheFactory {
   }
 
   @Override
-  public ServerCache createCache(ServerCacheType type, String key, ServerCacheOptions options) {
+  public ServerCache createCache(ServerCacheType type, String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
 
     switch (type) {
       case QUERY:
-        return createQueryCache(key, options);
+        return createQueryCache(key, tenantProvider, options);
       default:
-        return createNormalCache(type, key, options);
+        return createNormalCache(type, key, tenantProvider, options);
     }
   }
 
-  private ServerCache createNormalCache(ServerCacheType type, String key, ServerCacheOptions options) {
+  private ServerCache createNormalCache(ServerCacheType type, String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
 
     String fullName = type.name() + "-" + key;
     logger.debug("get cache [{}]", fullName);
     IMap<Object, Object> map = instance.getMap(fullName);
-    return new HzCache(map);
+    return new HzCache(map, tenantProvider);
   }
 
-  private ServerCache createQueryCache(String key, ServerCacheOptions options) {
+  private ServerCache createQueryCache(String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
 
     synchronized (this) {
       HzQueryCache cache = queryCaches.get(key);
       if (cache == null) {
         logger.debug("create query cache [{}]", key);
-        cache = new HzQueryCache(key, options);
+        cache = new HzQueryCache(key, tenantProvider, options);
         cache.periodicTrim(executor);
         queryCaches.put(key, cache);
       }
@@ -137,8 +131,8 @@ public class HzCacheFactory implements ServerCacheFactory {
    */
   private class HzQueryCache extends DefaultServerCache {
 
-    HzQueryCache(String name, ServerCacheOptions options) {
-      super(name, options);
+    HzQueryCache(String name, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
+      super(name, tenantProvider, options);
     }
 
     @Override

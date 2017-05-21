@@ -33,7 +33,7 @@ public class HzCacheFactoryTest {
     serverConfig.putServiceObject("hazelcast", instance);
 
     HzCacheFactory factory = new HzCacheFactory(serverConfig, null);
-    factory.createCache(ServerCacheType.BEAN, "foo", new ServerCacheOptions());
+    factory.createCache(ServerCacheType.BEAN, "foo", null, new ServerCacheOptions());
   }
 
   @Test

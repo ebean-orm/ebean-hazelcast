@@ -10,7 +10,7 @@
 
   <groupId>io.ebean</groupId>
   <artifactId>ebean-hazelcast</artifactId>
-  <version>2.1.2-SNAPSHOT</version>
+  <version>10.3.1-SNAPSHOT</version>
 
   <scm>
     <developerConnection>scm:git:git@github.com:ebean-orm/ebean-hazelcast.git</developerConnection>
@@ -38,7 +38,7 @@
     <dependency>
       <groupId>io.ebean</groupId>
       <artifactId>ebean</artifactId>
-      <version>10.1.1</version>
+      <version>10.3.1</version>
       <scope>provided</scope>
     </dependency>
 
@@ -58,7 +58,7 @@
     <dependency>
       <groupId>io.ebean</groupId>
       <artifactId>ebean-mocker</artifactId>
-      <version>10.1.1</version>
+      <version>10.3.1</version>
       <scope>test</scope>
     </dependency>
 
