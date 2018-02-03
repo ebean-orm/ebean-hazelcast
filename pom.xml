@@ -18,7 +18,7 @@
   </scm>
 
   <properties>
-    <hazelcast.version>3.6.2</hazelcast.version>
+    <hazelcast.version>3.9.2</hazelcast.version>
   </properties>
 
   <dependencies>
@@ -38,7 +38,7 @@
     <dependency>
       <groupId>io.ebean</groupId>
       <artifactId>ebean</artifactId>
-      <version>10.3.1</version>
+      <version>11.10.1</version>
       <scope>provided</scope>
     </dependency>
 
