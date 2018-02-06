@@ -10,7 +10,7 @@
 
   <groupId>io.ebean</groupId>
   <artifactId>ebean-hazelcast</artifactId>
-  <version>10.3.2-SNAPSHOT</version>
+  <version>11.10.1-SNAPSHOT</version>
 
   <scm>
     <developerConnection>scm:git:git@github.com:ebean-orm/ebean-hazelcast.git</developerConnection>
