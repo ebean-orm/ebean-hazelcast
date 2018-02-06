@@ -30,13 +30,13 @@ class HzCache implements ServerCache {
   }
 
   @Override
-  public Object put(Object id, Object value) {
-    return map.put(key(id), value);
+  public void put(Object id, Object value) {
+    map.put(key(id), value);
   }
 
   @Override
-  public Object remove(Object id) {
-    return map.remove(key(id));
+  public void remove(Object id) {
+    map.remove(key(id));
   }
 
   @Override
