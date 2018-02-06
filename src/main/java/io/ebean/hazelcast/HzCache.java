@@ -6,6 +6,9 @@ import io.ebean.cache.TenantAwareKey;
 import com.hazelcast.core.IMap;
 import io.ebean.config.CurrentTenantProvider;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * IMap cache implementation for Ebean ServerCache interface.
  */
@@ -25,6 +28,16 @@ class HzCache implements ServerCache {
   }
 
   @Override
+  public Map<Object, Object> getAll(Set<Object> keys) {
+    return map.getAll(keys);
+  }
+
+  @Override
+  public void putAll(Map<Object, Object> keyValues) {
+    map.putAll(keyValues);
+  }
+
+  @Override
   public Object get(Object id) {
     return map.get(key(id));
   }
@@ -36,7 +49,7 @@ class HzCache implements ServerCache {
 
   @Override
   public void remove(Object id) {
-    map.remove(key(id));
+    map.delete(key(id));
   }
 
   @Override
