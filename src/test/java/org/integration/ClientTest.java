@@ -7,9 +7,9 @@ import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 import org.example.domain.EFoo;
-import org.testng.annotations.Test;
+import org.junit.Test;
 
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 
 public class ClientTest {
 

@@ -5,13 +5,13 @@
 
 
   <near-cache name="*org.example.domain.Customer">
-    <max-size>1000</max-size>
-    <eviction-policy>LRU</eviction-policy>
+    <!--<max-size>1000</max-size>-->
+    <eviction size="1000"/>
   </near-cache>
 
   <near-cache name="BEAN-org.example.domain.Customer">
-    <max-size>5000</max-size>
-    <eviction-policy>LRU</eviction-policy>
+    <!--<max-size>5000</max-size>-->
+    <eviction eviction-policy="LRU" size="5000"/>
   </near-cache>
 
 </hazelcast-client>

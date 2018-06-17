@@ -4,16 +4,13 @@ import io.ebean.Ebean;
 import io.ebean.EbeanServer;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheManager;
-import io.ebean.cache.ServerCacheOptions;
-import io.ebean.cache.ServerCacheType;
-import io.ebean.config.ServerConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 import org.example.domain.EFoo;
-import org.testng.annotations.Test;
+import org.junit.Test;
+
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.testng.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 
 
 public class HzCacheFactoryTest {
@@ -24,17 +21,17 @@ public class HzCacheFactoryTest {
     server = Ebean.getDefaultServer();
   }
 
-  @Test
-  public void supplyHazelcastInstance() {
-
-    HazelcastInstance instance = Hazelcast.newHazelcastInstance();
-
-    ServerConfig serverConfig = new ServerConfig();
-    serverConfig.putServiceObject("hazelcast", instance);
-
-    HzCacheFactory factory = new HzCacheFactory(serverConfig, null);
-    factory.createCache(ServerCacheType.BEAN, "foo", null, new ServerCacheOptions());
-  }
+//  @Test
+//  public void supplyHazelcastInstance() {
+//
+//    HazelcastInstance instance = Hazelcast.newHazelcastInstance();
+//
+//    ServerConfig serverConfig = new ServerConfig();
+//    serverConfig.putServiceObject("hazelcast", instance);
+//
+//    HzCacheFactory factory = new HzCacheFactory(serverConfig, null);
+//    factory.createCache(ServerCacheType.BEAN, "foo", null, new ServerCacheOptions());
+//  }
 
   @Test
   public void integration() {
@@ -45,13 +42,14 @@ public class HzCacheFactoryTest {
 
     assertThat(beanCache).isInstanceOf(HzCache.class);
 
-    EFoo fetch1 = Ebean.find(EFoo.class, 1);
+    EFoo fetch1 = Ebean.find(EFoo.class, UUID.randomUUID());
 
-    System.out.println("f"+fetch1);
+    System.out.println("f" + fetch1);
+
+    putGet();
   }
 
-  @Test(dependsOnMethods = "integration")
-  public void putGet() {
+  private void putGet() {
 
     EFoo foo = new EFoo("hello");
     foo.save();

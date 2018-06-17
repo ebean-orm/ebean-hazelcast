@@ -9,16 +9,20 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.ITopic;
 import io.ebean.BackgroundExecutor;
 import io.ebean.cache.ServerCache;
+import io.ebean.cache.ServerCacheConfig;
 import io.ebean.cache.ServerCacheFactory;
-import io.ebean.cache.ServerCacheOptions;
-import io.ebean.cache.ServerCacheType;
-import io.ebean.config.CurrentTenantProvider;
+import io.ebean.cache.ServerCacheNotification;
+import io.ebean.cache.ServerCacheNotify;
 import io.ebean.config.ServerConfig;
-import io.ebeaninternal.server.cache.DefaultServerCache;
+import io.ebeaninternal.server.cache.DefaultServerCacheConfig;
+import io.ebeaninternal.server.cache.DefaultServerQueryCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,7 +44,14 @@ public class HzCacheFactory implements ServerCacheFactory {
 	 */
 	private final ITopic<String> queryCacheInvalidation;
 
+	/**
+	 * Topic used to broadcast table modifications.
+	 */
+	private final ITopic<String> tableModNotify;
+
 	private final BackgroundExecutor executor;
+
+	private ServerCacheNotify listener;
 
 	public HzCacheFactory(ServerConfig serverConfig, BackgroundExecutor executor) {
 
@@ -57,6 +68,9 @@ public class HzCacheFactory implements ServerCacheFactory {
 		} else {
 			instance = createInstance(serverConfig);
 		}
+
+		tableModNotify = instance.getReliableTopic("tableModNotify");
+		tableModNotify.addMessageListener(message -> processTableNotify(message.getMessageObject()));
 
 		queryCacheInvalidation = instance.getReliableTopic("queryCacheInvalidation");
 		queryCacheInvalidation.addMessageListener(message -> processInvalidation(message.getMessageObject()));
@@ -94,33 +108,37 @@ public class HzCacheFactory implements ServerCacheFactory {
 	}
 
 	@Override
-	public ServerCache createCache(ServerCacheType type, String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
+	public ServerCacheNotify createCacheNotify(ServerCacheNotify listener) {
+		this.listener = listener;
+		return new HzServerCacheNotify(tableModNotify);
+	}
 
-		switch (type) {
-			case QUERY:
-				return createQueryCache(key, tenantProvider, options);
-			default:
-				return createNormalCache(type, key, tenantProvider, options);
+	@Override
+	public ServerCache createCache(ServerCacheConfig config) {
+		if (config.isQueryCache()) {
+			return createQueryCache(config);
+		} else {
+			return createNormalCache(config);
 		}
 	}
 
-	private ServerCache createNormalCache(ServerCacheType type, String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
+	private ServerCache createNormalCache(ServerCacheConfig config) {
 
-		String fullName = type.name() + "-" + key;
+		String fullName = config.getType().name() + "-" + config.getCacheKey();
 		logger.debug("get cache [{}]", fullName);
 		IMap<Object, Object> map = instance.getMap(fullName);
-		return new HzCache(map, tenantProvider);
+		return new HzCache(map, config.getTenantProvider());
 	}
 
-	private ServerCache createQueryCache(String key, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
+	private ServerCache createQueryCache(ServerCacheConfig config) {
 
 		synchronized (this) {
-			HzQueryCache cache = queryCaches.get(key);
+			HzQueryCache cache = queryCaches.get(config.getCacheKey());
 			if (cache == null) {
-				logger.debug("create query cache [{}]", key);
-				cache = new HzQueryCache(key, tenantProvider, options);
+				logger.debug("create query cache [{}]", config.getCacheKey());
+				cache = new HzQueryCache(new DefaultServerCacheConfig(config));
 				cache.periodicTrim(executor);
-				queryCaches.put(key, cache);
+				queryCaches.put(config.getCacheKey(), cache);
 			}
 			return cache;
 		}
@@ -129,10 +147,10 @@ public class HzCacheFactory implements ServerCacheFactory {
 	/**
 	 * Extends normal default implementation with notification of clear() to cluster.
 	 */
-	private class HzQueryCache extends DefaultServerCache {
+	private class HzQueryCache extends DefaultServerQueryCache {
 
-		HzQueryCache(String name, CurrentTenantProvider tenantProvider, ServerCacheOptions options) {
-			super(name, tenantProvider, options);
+		HzQueryCache(DefaultServerCacheConfig cacheConfig) {
+			super(cacheConfig);
 		}
 
 		@Override
@@ -164,6 +182,24 @@ public class HzCacheFactory implements ServerCacheFactory {
 		if (cache != null) {
 			cache.invalidate();
 		}
+	}
+
+	/**
+	 * Process a remote dependent table modify event.
+	 */
+	private void processTableNotify(String rawMessage) {
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("processTableNotify {}", rawMessage);
+		}
+
+		String[] split = rawMessage.split(",");
+		long modTimestamp = Long.parseLong(split[0]);
+
+		Set<String> tables = new HashSet<>();
+		tables.addAll(Arrays.asList(split).subList(1, split.length));
+
+		listener.notify(new ServerCacheNotification(modTimestamp, tables));
 	}
 
 }
