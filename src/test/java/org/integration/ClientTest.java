@@ -6,7 +6,7 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import org.example.domain.EFoo;
+import org.example.domain.ECustomer;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -15,7 +15,7 @@ public class ClientTest {
 
   private HazelcastInstance client;
 
-  ClientTest() {
+  public ClientTest() {
 
     ClientConfig clientConfig = new ClientConfig();
 
@@ -31,19 +31,16 @@ public class ClientTest {
 
     IMap<Object, Object> map = client.getMap("mapName");
 
-    map.put("asd", new EFoo("asd"));
+    map.put("asd", new ECustomer("asd"));
     Object asd = map.get("asd");
 
     assertNotNull(asd);
 
     IMap<Object, Object> remote = client.getMap("remote");
-    remote.put("some", new EFoo("hello Rob"));
-  }
+    remote.put("some", new ECustomer("hello Rob"));
 
-  @Test
-  public void testGet() {
-    IMap<Object, Object> remote = client.getMap("remote");
-    EFoo val = (EFoo)remote.get("some");
+    ECustomer val = (ECustomer)remote.get("some");
     System.out.println(""+val.getName());
   }
+
 }

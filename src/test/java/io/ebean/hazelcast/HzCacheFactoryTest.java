@@ -4,10 +4,12 @@ import io.ebean.Ebean;
 import io.ebean.EbeanServer;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheManager;
-import org.example.domain.EFoo;
+import org.example.domain.EAddress;
+import org.example.domain.ECustomer;
+import org.example.domain.EOrder;
 import org.junit.Test;
 
-import java.util.UUID;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
@@ -33,29 +35,114 @@ public class HzCacheFactoryTest {
 //    factory.createCache(ServerCacheType.BEAN, "foo", null, new ServerCacheOptions());
 //  }
 
+
   @Test
-  public void integration() {
+  public void setup() {
+
+    int count = Ebean.find(ECustomer.class).findCount();
+    if (count == 0) {
+
+      ECustomer customer = new ECustomer("Rob");
+      customer.setAddress(new EAddress("Line1", "Auckland"));
+      customer.save();
+
+      for (int i = 0; i < 3; i++) {
+        EOrder order = new EOrder(customer);
+        order.setDescription("some " + 1);
+        order.save();
+      }
+    }
+  }
+
+
+  @Test
+  public void run() throws InterruptedException {
+
+    ServerCacheManager cacheManager = server.getServerCacheManager();
+    cacheManager.clearAll();
+
+//    ECustomer one = new ECustomer("hello");
+//    one.save();
+
+
+    for (int i = 0; i < 3; i++) {
+
+      List<ECustomer> cust = Ebean.find(ECustomer.class)
+        .where().eq("address.city", "Auckland")
+        .setUseQueryCache(true)
+        .setReadOnly(true)
+        .findList();
+
+      System.out.println("found " + cust);
+
+//      ECustomer fetch1 = Ebean.find(ECustomer.class, 1);
+//      System.out.println("got " + fetch1.getName() + " version:" + fetch1.getVersion());
+
+      Thread.sleep(5000);
+    }
+  }
+
+  @Test
+  public void integration() throws InterruptedException {
 
 
     ServerCacheManager cacheManager = server.getServerCacheManager();
-    ServerCache beanCache = cacheManager.getBeanCache(EFoo.class);
+    ServerCache beanCache = cacheManager.getBeanCache(ECustomer.class);
 
     assertThat(beanCache).isInstanceOf(HzCache.class);
 
-    EFoo fetch1 = Ebean.find(EFoo.class, UUID.randomUUID());
+//    Ebean.update(ECustomer.class)
+//      .setRaw("name = 'x'")
+//      .where().idEq(1)
+//      .update();
 
-    System.out.println("f" + fetch1);
+//    Ebean.update(EAddress.class)
+//      .setRaw("line1 = 's'")
+//      .where().idEq(1)
+//      .update();
 
-    putGet();
+    Ebean.createSqlUpdate("update eaddress set line1 = line1 || 's'")
+      .execute();
+
+    for (int i = 0; i < 5; i++) {
+
+      Ebean.createSqlUpdate("update eaddress set line1 = line1 || 's'")
+        .execute();
+
+//      Ebean.update(EAddress.class)
+//        .setRaw("line1 = line1 || 's'")
+//        .where().idEq(1)
+//        .update();
+
+//      Ebean.update(ECustomer.class)
+//      .setRaw("name = name || 's'")
+//        .where().idEq(1)
+//        .update();
+
+
+//      EAddress addr = Ebean.find(EAddress.class, 1);
+//      addr.setLine1(addr.getLine1() + "x");
+//      addr.save();
+
+
+//      ECustomer fetch1 = Ebean.find(ECustomer.class, 1);
+//      fetch1.setName(fetch1.getName()+ "x");
+//      fetch1.save();
+
+      Thread.sleep(1000);
+    }
+
+
+    //putGet();
   }
 
   private void putGet() {
 
-    EFoo foo = new EFoo("hello");
+    ECustomer foo = new ECustomer("hello");
     foo.save();
 
-    EFoo fetch1 = Ebean.find(EFoo.class, foo.getId());
-    EFoo fetch2 = Ebean.find(EFoo.class, foo.getId());
+    ECustomer fetch1 = Ebean.find(ECustomer.class, foo.getId());
+    ECustomer fetch2 = Ebean.find(ECustomer.class, foo.getId());
 
     assertNotNull(fetch1);
     assertNotNull(fetch2);

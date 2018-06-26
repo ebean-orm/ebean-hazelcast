@@ -3,11 +3,15 @@ package org.example.domain;
 
 import io.ebean.annotation.Cache;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import java.util.List;
 
-@Cache
+@Cache(enableQueryCache = true)
 @Entity
-public class EFoo extends EBase {
+public class ECustomer extends EBase {
 
   public enum Status {
     NEW,
@@ -21,7 +25,13 @@ public class EFoo extends EBase {
 
   String notes;
 
-  public EFoo(String name) {
+  @ManyToOne(cascade = CascadeType.ALL)
+  EAddress address;
+
+  @OneToMany
+  List<EOrder> orders;
+
+  public ECustomer(String name) {
     this.name = name;
     this.status = Status.NEW;
   }
@@ -48,5 +58,21 @@ public class EFoo extends EBase {
 
   public void setNotes(String notes) {
     this.notes = notes;
+  }
+
+  public EAddress getAddress() {
+    return address;
+  }
+
+  public void setAddress(EAddress address) {
+    this.address = address;
+  }
+
+  public List<EOrder> getOrders() {
+    return orders;
+  }
+
+  public void setOrders(List<EOrder> orders) {
+    this.orders = orders;
   }
 }

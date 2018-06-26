@@ -14,10 +14,10 @@ import java.util.UUID;
 public class EBase extends Model {
 
   @Id
-  protected UUID id;
+  protected long id;
 
   @Version
-  protected Long version;
+  protected long version;
 
   @WhenCreated
   protected Timestamp whenCreated;
@@ -25,19 +25,19 @@ public class EBase extends Model {
   @WhenModified
   protected Timestamp whenModified;
 
-  public UUID getId() {
+  public long getId() {
     return id;
   }
 
-  public void setId(UUID id) {
+  public void setId(long id) {
     this.id = id;
   }
 
-  public Long getVersion() {
+  public long getVersion() {
     return version;
   }
 
-  public void setVersion(Long version) {
+  public void setVersion(long version) {
     this.version = version;
   }
 

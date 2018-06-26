@@ -171,7 +171,7 @@ public class HzCacheFactory implements ServerCacheFactory {
 	 * Send the invalidation message to all members of the cluster.
 	 */
 	private void sendInvalidation(String key) {
-		queryCacheInvalidation.publish(key);
+    queryCacheInvalidation.publish(key);
 	}
 
 	/**

@@ -10,7 +10,7 @@
 
   <groupId>io.ebean</groupId>
   <artifactId>ebean-hazelcast</artifactId>
-  <version>11.10.2-SNAPSHOT</version>
+  <version>11.18.1-SNAPSHOT</version>
 
   <scm>
     <developerConnection>scm:git:git@github.com:ebean-orm/ebean-hazelcast.git</developerConnection>
@@ -38,7 +38,7 @@
     <dependency>
       <groupId>io.ebean</groupId>
       <artifactId>ebean</artifactId>
-      <version>11.18.1-SNAPSHOT</version>
+      <version>11.18.1</version>
       <scope>provided</scope>
     </dependency>
 
@@ -47,6 +47,20 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.7.25</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.ebean.test</groupId>
+      <artifactId>ebean-test-config</artifactId>
+      <version>11.17.1</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>9.4.1212</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
