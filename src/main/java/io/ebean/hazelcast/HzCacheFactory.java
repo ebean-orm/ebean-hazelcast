@@ -194,12 +194,8 @@ public class HzCacheFactory implements ServerCacheFactory {
 		}
 
 		String[] split = rawMessage.split(",");
-		long modTimestamp = Long.parseLong(split[0]);
-
-		Set<String> tables = new HashSet<>();
-		tables.addAll(Arrays.asList(split).subList(1, split.length));
-
-		listener.notify(new ServerCacheNotification(modTimestamp, tables));
+		Set<String> tables = new HashSet<>(Arrays.asList(split));
+		listener.notify(new ServerCacheNotification(tables));
 	}
 
 }

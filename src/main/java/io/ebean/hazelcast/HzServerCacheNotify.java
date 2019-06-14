@@ -28,8 +28,6 @@ class HzServerCacheNotify implements ServerCacheNotify {
     if (dependentTables != null && !dependentTables.isEmpty()) {
 
       StringBuilder msg = new StringBuilder(50);
-      msg.append(tableModifications.getModifyTimestamp()).append(",");
-
       for (String table : dependentTables) {
         msg.append(table).append(",");
       }
