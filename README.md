@@ -1,2 +1,2 @@
-# avaje-ebeanorm-hazelcast
+# ebean-hazelcast
 Hazelcast L2 cache option
