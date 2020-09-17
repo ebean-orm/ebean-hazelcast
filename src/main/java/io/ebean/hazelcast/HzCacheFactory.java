@@ -13,7 +13,7 @@ import io.ebean.cache.ServerCacheConfig;
 import io.ebean.cache.ServerCacheFactory;
 import io.ebean.cache.ServerCacheNotification;
 import io.ebean.cache.ServerCacheNotify;
-import io.ebean.config.ServerConfig;
+import io.ebean.config.DatabaseConfig;
 import io.ebeaninternal.server.cache.DefaultServerCacheConfig;
 import io.ebeaninternal.server.cache.DefaultServerQueryCache;
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ public class HzCacheFactory implements ServerCacheFactory {
 
 	private ServerCacheNotify listener;
 
-	public HzCacheFactory(ServerConfig serverConfig, BackgroundExecutor executor) {
+	public HzCacheFactory(DatabaseConfig config, BackgroundExecutor executor) {
 
 		this.executor = executor;
 		this.queryCaches = new ConcurrentHashMap<>();
@@ -62,11 +62,11 @@ public class HzCacheFactory implements ServerCacheFactory {
 			System.setProperty("hazelcast.logging.type", "slf4j");
 		}
 
-		Object hazelcastInstance = serverConfig.getServiceObject("hazelcast");
+		Object hazelcastInstance = config.getServiceObject("hazelcast");
 		if (hazelcastInstance != null) {
 			instance = (HazelcastInstance) hazelcastInstance;
 		} else {
-			instance = createInstance(serverConfig);
+			instance = createInstance(config);
 		}
 
 		tableModNotify = instance.getReliableTopic("tableModNotify");
@@ -79,8 +79,8 @@ public class HzCacheFactory implements ServerCacheFactory {
 	/**
 	 * Create a new HazelcastInstance based on configuration from serverConfig.
 	 */
-	private HazelcastInstance createInstance(ServerConfig serverConfig) {
-		Object configuration = serverConfig.getServiceObject("hazelcastConfiguration");
+	private HazelcastInstance createInstance(DatabaseConfig config) {
+		Object configuration = config.getServiceObject("hazelcastConfiguration");
 		if (configuration != null) {
 			// explicit configuration probably set via DI
 			if (configuration instanceof ClientConfig) {
@@ -92,7 +92,7 @@ public class HzCacheFactory implements ServerCacheFactory {
 			}
 		} else {
 			// implicit configuration via hazelcast-client.xml or hazelcast.xml
-			if (isServerMode(serverConfig.getProperties())) {
+			if (isServerMode(config.getProperties())) {
 				return Hazelcast.newHazelcastInstance();
 			} else {
 				return HazelcastClient.newHazelcastClient();

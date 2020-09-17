@@ -3,7 +3,7 @@ package io.ebean.hazelcast;
 import io.ebean.BackgroundExecutor;
 import io.ebean.cache.ServerCacheFactory;
 import io.ebean.cache.ServerCachePlugin;
-import io.ebean.config.ServerConfig;
+import io.ebean.config.DatabaseConfig;
 
 /**
  * Creates the Hazelcast ServerCacheFactory implementation.
@@ -23,7 +23,7 @@ public class HzCachePlugin implements ServerCachePlugin {
 	 * @return The server cache factory used to create the L2 caches.
 	 */
 	@Override
-	public ServerCacheFactory create(ServerConfig config, BackgroundExecutor executor) {
+	public ServerCacheFactory create(DatabaseConfig config, BackgroundExecutor executor) {
 		return new HzCacheFactory(config, executor);
 	}
 }
