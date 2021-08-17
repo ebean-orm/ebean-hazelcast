@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Factory for creating the various caches.
  */
-public class HzCacheFactory implements ServerCacheFactory {
+public final class HzCacheFactory implements ServerCacheFactory {
 
   /**
    * This explicitly uses the common "io.ebean.cache" namespace.
@@ -36,41 +36,32 @@ public class HzCacheFactory implements ServerCacheFactory {
   private static final Logger logger = LoggerFactory.getLogger("io.ebean.cache.HzCacheFactory");
 
   private final ConcurrentHashMap<String, HzQueryCache> queryCaches;
-
   private final HazelcastInstance instance;
-
   /**
    * Topic used to broadcast query cache invalidation.
    */
   private final ITopic<String> queryCacheInvalidation;
-
   /**
    * Topic used to broadcast table modifications.
    */
   private final ITopic<String> tableModNotify;
-
   private final BackgroundExecutor executor;
-
   private ServerCacheNotify listener;
 
   public HzCacheFactory(DatabaseConfig config, BackgroundExecutor executor) {
     this.executor = executor;
     this.queryCaches = new ConcurrentHashMap<>();
-
     if (System.getProperty("hazelcast.logging.type") == null) {
       System.setProperty("hazelcast.logging.type", "slf4j");
     }
-
     Object hazelcastInstance = config.getServiceObject("hazelcast");
     if (hazelcastInstance != null) {
       instance = (HazelcastInstance) hazelcastInstance;
     } else {
       instance = createInstance(config);
     }
-
     tableModNotify = instance.getReliableTopic("tableModNotify");
     tableModNotify.addMessageListener(message -> processTableNotify(message.getMessageObject()));
-
     queryCacheInvalidation = instance.getReliableTopic("queryCacheInvalidation");
     queryCacheInvalidation.addMessageListener(message -> processInvalidation(message.getMessageObject()));
   }
@@ -130,7 +121,6 @@ public class HzCacheFactory implements ServerCacheFactory {
   }
 
   private ServerCache createQueryCache(ServerCacheConfig config) {
-
     synchronized (this) {
       HzQueryCache cache = queryCaches.get(config.getCacheKey());
       if (cache == null) {
@@ -187,11 +177,9 @@ public class HzCacheFactory implements ServerCacheFactory {
    * Process a remote dependent table modify event.
    */
   private void processTableNotify(String rawMessage) {
-
     if (logger.isDebugEnabled()) {
       logger.debug("processTableNotify {}", rawMessage);
     }
-
     String[] split = rawMessage.split(",");
     Set<String> tables = new HashSet<>(Arrays.asList(split));
     listener.notify(new ServerCacheNotification(tables));

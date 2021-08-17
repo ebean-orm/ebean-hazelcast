@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * Send the table modifications via Hazelcast topic.
  */
-class HzServerCacheNotify implements ServerCacheNotify {
+final class HzServerCacheNotify implements ServerCacheNotify {
 
   private static final Logger log = LoggerFactory.getLogger("io.ebean.cache.TABLEMODS");
 
@@ -23,21 +23,17 @@ class HzServerCacheNotify implements ServerCacheNotify {
 
   @Override
   public void notify(ServerCacheNotification tableModifications) {
-
     Set<String> dependentTables = tableModifications.getDependentTables();
     if (dependentTables != null && !dependentTables.isEmpty()) {
-
       StringBuilder msg = new StringBuilder(50);
       for (String table : dependentTables) {
         msg.append(table).append(",");
       }
-
       String formattedMsg = msg.toString();
       if (log.isDebugEnabled()) {
         log.debug("Publish TableMods - {}", formattedMsg);
       }
       tableModNotify.publish(formattedMsg);
     }
-
   }
 }

@@ -8,7 +8,7 @@ import io.ebean.config.DatabaseConfig;
 /**
  * Creates the Hazelcast ServerCacheFactory implementation.
  */
-public class HzCachePlugin implements ServerCachePlugin {
+public final class HzCachePlugin implements ServerCachePlugin {
 
   /**
    * Create and return the Hazelcast ServerCacheFactory implementation.
