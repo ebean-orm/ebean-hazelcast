@@ -12,10 +12,9 @@ import java.util.Set;
 /**
  * IMap cache implementation for Ebean ServerCache interface.
  */
-class HzCache implements ServerCache {
+final class HzCache implements ServerCache {
 
   private final TenantAwareKey tenantAwareKey;
-
   private final IMap<Object, Object> map;
 
   HzCache(IMap<Object, Object> map, CurrentTenantProvider tenantProvider) {
