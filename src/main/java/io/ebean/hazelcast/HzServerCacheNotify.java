@@ -1,10 +1,11 @@
 package io.ebean.hazelcast;
 
-import com.hazelcast.core.ITopic;
 import io.ebean.cache.ServerCacheNotification;
 import io.ebean.cache.ServerCacheNotify;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.hazelcast.topic.ITopic;
 
 import java.util.Set;
 
