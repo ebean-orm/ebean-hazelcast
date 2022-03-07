@@ -5,8 +5,9 @@ import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.ITopic;
+import com.hazelcast.map.IMap;
+import com.hazelcast.topic.ITopic;
+
 import io.ebean.BackgroundExecutor;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheConfig;

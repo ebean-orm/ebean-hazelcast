@@ -5,11 +5,13 @@ import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IMap;
-import org.example.domain.ECustomer;
+import com.hazelcast.map.IMap;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
+
+import org.example.domain.ECustomer;
 
 public class ClientTest {
 

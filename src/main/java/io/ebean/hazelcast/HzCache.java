@@ -1,6 +1,5 @@
 package io.ebean.hazelcast;
 
-import com.hazelcast.core.IMap;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheStatistics;
 import io.ebean.cache.TenantAwareKey;
@@ -8,6 +7,8 @@ import io.ebean.config.CurrentTenantProvider;
 
 import java.util.Map;
 import java.util.Set;
+
+import com.hazelcast.map.IMap;
 
 /**
  * IMap cache implementation for Ebean ServerCache interface.
