@@ -14,6 +14,7 @@ import io.ebean.cache.ServerCacheConfig;
 import io.ebean.cache.ServerCacheFactory;
 import io.ebean.cache.ServerCacheNotification;
 import io.ebean.cache.ServerCacheNotify;
+import io.ebean.cache.TenantAwareKey;
 import io.ebean.config.DatabaseConfig;
 import io.ebeaninternal.server.cache.DefaultServerCacheConfig;
 import io.ebeaninternal.server.cache.DefaultServerQueryCache;
@@ -118,7 +119,12 @@ public final class HzCacheFactory implements ServerCacheFactory {
     String fullName = config.getType().name() + "-" + config.getCacheKey();
     logger.debug("get cache [{}]", fullName);
     IMap<Object, Object> map = instance.getMap(fullName);
-    return new HzCache(map, config.getTenantProvider());
+    ServerCache hzCache = new HzCache(map);
+    if (config.getTenantProvider() != null) {
+      return new TenantAwareCache(hzCache, new TenantAwareKey(config.getTenantProvider()));
+    } else  {
+      return hzCache;
+    }
   }
 
   private ServerCache createQueryCache(ServerCacheConfig config) {
