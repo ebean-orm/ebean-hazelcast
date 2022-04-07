@@ -1,9 +1,13 @@
 package io.ebean.hazelcast;
 
+import io.ebean.DB;
+import io.ebean.Database;
 import io.ebean.Ebean;
 import io.ebean.EbeanServer;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheManager;
+import io.ebean.cache.TenantAwareCache;
+import io.ebean.cache.TenantAwareKey;
 import org.example.domain.EAddress;
 import org.example.domain.ECustomer;
 import org.example.domain.EOrder;
@@ -17,10 +21,10 @@ import static org.junit.Assert.assertNotNull;
 
 public class HzCacheFactoryTest {
 
-  private final EbeanServer server;
+  private final Database server;
 
   public HzCacheFactoryTest() {
-    server = Ebean.getDefaultServer();
+    server = DB.getDefault();
   }
 
 //  @Test
@@ -39,7 +43,7 @@ public class HzCacheFactoryTest {
   @Test
   public void setup() {
 
-    int count = Ebean.find(ECustomer.class).findCount();
+    int count = DB.find(ECustomer.class).findCount();
     if (count == 0) {
 
       ECustomer customer = new ECustomer("Rob");
@@ -58,7 +62,7 @@ public class HzCacheFactoryTest {
   @Test
   public void run() throws InterruptedException {
 
-    ServerCacheManager cacheManager = server.getServerCacheManager();
+    ServerCacheManager cacheManager = server.cacheManager();
     cacheManager.clearAll();
 
 //    ECustomer one = new ECustomer("hello");
@@ -67,7 +71,7 @@ public class HzCacheFactoryTest {
 
     for (int i = 0; i < 3; i++) {
 
-      List<ECustomer> cust = Ebean.find(ECustomer.class)
+      List<ECustomer> cust = DB.find(ECustomer.class)
         .where().eq("address.city", "Auckland")
         .setUseQueryCache(true)
         .setReadOnly(true)
@@ -86,10 +90,11 @@ public class HzCacheFactoryTest {
   public void integration() throws InterruptedException {
 
 
-    ServerCacheManager cacheManager = server.getServerCacheManager();
-    ServerCache beanCache = cacheManager.getBeanCache(ECustomer.class);
+    ServerCacheManager cacheManager = server.cacheManager();
+    ServerCache beanCache = cacheManager.beanCache(ECustomer.class);
 
-    assertThat(beanCache).isInstanceOf(HzCache.class);
+    assertThat(beanCache).isInstanceOf(TenantAwareCache.class);
+    assertThat(beanCache.unwrap(HzCache.class)).isInstanceOf(HzCache.class);
 
 //    Ebean.update(ECustomer.class)
 //      .setRaw("name = 'x'")
@@ -101,13 +106,10 @@ public class HzCacheFactoryTest {
 //      .where().idEq(1)
 //      .update();
 
-    Ebean.createSqlUpdate("update eaddress set line1 = line1 || 's'")
-      .execute();
-
+    DB.sqlUpdate("update eaddress set line1 = line1 || 's'").execute();
     for (int i = 0; i < 5; i++) {
 
-      Ebean.createSqlUpdate("update eaddress set line1 = line1 || 's'")
-        .execute();
+      DB.sqlUpdate("update eaddress set line1 = line1 || 's'").execute();
 
 //      Ebean.update(EAddress.class)
 //        .setRaw("line1 = line1 || 's'")

@@ -114,11 +114,10 @@ public final class HzCacheFactory implements ServerCacheFactory {
   }
 
   private ServerCache createNormalCache(ServerCacheConfig config) {
-
     String fullName = config.getType().name() + "-" + config.getCacheKey();
     logger.debug("get cache [{}]", fullName);
     IMap<Object, Object> map = instance.getMap(fullName);
-    return new HzCache(map, config.getTenantProvider());
+    return config.tenantAware(new HzCache(map));
   }
 
   private ServerCache createQueryCache(ServerCacheConfig config) {
@@ -130,7 +129,7 @@ public final class HzCacheFactory implements ServerCacheFactory {
         cache.periodicTrim(executor);
         queryCaches.put(config.getCacheKey(), cache);
       }
-      return cache;
+      return config.tenantAware(cache);
     }
   }
 
