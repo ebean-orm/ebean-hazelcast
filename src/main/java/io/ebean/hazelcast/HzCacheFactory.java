@@ -7,7 +7,6 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.topic.ITopic;
-
 import io.ebean.BackgroundExecutor;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheConfig;
@@ -15,6 +14,7 @@ import io.ebean.cache.ServerCacheFactory;
 import io.ebean.cache.ServerCacheNotification;
 import io.ebean.cache.ServerCacheNotify;
 import io.ebean.config.DatabaseConfig;
+import io.ebeaninternal.server.cache.DefaultServerCache;
 import io.ebeaninternal.server.cache.DefaultServerCacheConfig;
 import io.ebeaninternal.server.cache.DefaultServerQueryCache;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public final class HzCacheFactory implements ServerCacheFactory {
    */
   private static final Logger logger = LoggerFactory.getLogger("io.ebean.cache.HzCacheFactory");
 
-  private final ConcurrentHashMap<String, HzQueryCache> queryCaches;
+  private final ConcurrentHashMap<String, HzLocalCache> localCaches;
   private final HazelcastInstance instance;
   /**
    * Topic used to broadcast query cache invalidation.
@@ -51,7 +51,7 @@ public final class HzCacheFactory implements ServerCacheFactory {
 
   public HzCacheFactory(DatabaseConfig config, BackgroundExecutor executor) {
     this.executor = executor;
-    this.queryCaches = new ConcurrentHashMap<>();
+    this.localCaches = new ConcurrentHashMap<>();
     if (System.getProperty("hazelcast.logging.type") == null) {
       System.setProperty("hazelcast.logging.type", "slf4j");
     }
@@ -107,7 +107,9 @@ public final class HzCacheFactory implements ServerCacheFactory {
   @Override
   public ServerCache createCache(ServerCacheConfig config) {
     if (config.isQueryCache()) {
-      return createQueryCache(config);
+      return createLocalCache(config, true);
+    } else if (config.getCacheOptions().isNearCache()) {
+      return createLocalCache(config, false);
     } else {
       return createNormalCache(config);
     }
@@ -120,23 +122,38 @@ public final class HzCacheFactory implements ServerCacheFactory {
     return config.tenantAware(new HzCache(map));
   }
 
-  private ServerCache createQueryCache(ServerCacheConfig config) {
+  private ServerCache createLocalCache(ServerCacheConfig config, boolean queryCache) {
     synchronized (this) {
-      HzQueryCache cache = queryCaches.get(config.getCacheKey());
+      HzLocalCache cache = localCaches.get(config.getCacheKey());
       if (cache == null) {
         logger.debug("create query cache [{}]", config.getCacheKey());
-        cache = new HzQueryCache(new DefaultServerCacheConfig(config));
+        if (queryCache) {
+          cache = new HzQueryCache(new DefaultServerCacheConfig(config));
+        } else {
+          cache = new HzNearCache(new DefaultServerCacheConfig(config));
+        }
         cache.periodicTrim(executor);
-        queryCaches.put(config.getCacheKey(), cache);
+        localCaches.put(config.getCacheKey(), cache);
       }
+      assert cache instanceof HzQueryCache == queryCache : "Got wrong cache type: " + cache.getClass().getName() + ", queyCache: " + queryCache;
       return config.tenantAware(cache);
     }
   }
 
   /**
+   * Either a local QueryCache or a near beanCache.
+   */
+  interface HzLocalCache extends ServerCache {
+
+    void periodicTrim(BackgroundExecutor executor);
+
+    void invalidate();
+  }
+
+  /**
    * Extends normal default implementation with notification of clear() to cluster.
    */
-  private class HzQueryCache extends DefaultServerQueryCache {
+  class HzQueryCache extends DefaultServerQueryCache implements HzLocalCache {
 
     HzQueryCache(DefaultServerCacheConfig cacheConfig) {
       super(cacheConfig);
@@ -151,7 +168,29 @@ public final class HzCacheFactory implements ServerCacheFactory {
     /**
      * Process the invalidation message coming from the cluster.
      */
-    private void invalidate() {
+    @Override
+    public void invalidate() {
+      super.clear();
+    }
+  }
+
+  /**
+   * Extends normal default implementation with notification of clear() to cluster.
+   */
+  class HzNearCache extends DefaultServerCache implements HzLocalCache {
+
+    public HzNearCache(DefaultServerCacheConfig config) {
+      super(config);
+    }
+
+    @Override
+    public void clear() {
+      super.clear();
+      sendInvalidation(name);
+    }
+
+    @Override
+    public void invalidate() {
       super.clear();
     }
   }
@@ -167,7 +206,7 @@ public final class HzCacheFactory implements ServerCacheFactory {
    * Process a remote query cache invalidation.
    */
   private void processInvalidation(String cacheName) {
-    HzQueryCache cache = queryCaches.get(cacheName);
+    HzLocalCache cache = localCaches.get(cacheName);
     if (cache != null) {
       cache.invalidate();
     }
