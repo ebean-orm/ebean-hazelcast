@@ -3,12 +3,12 @@ package io.ebean.hazelcast;
 import io.ebean.DB;
 import io.ebean.Database;
 import io.ebean.Ebean;
-import io.ebean.EbeanServer;
 import io.ebean.cache.ServerCache;
 import io.ebean.cache.ServerCacheManager;
 import io.ebean.cache.TenantAwareCache;
-import io.ebean.cache.TenantAwareKey;
+import io.ebeaninternal.server.cache.DefaultServerQueryCache;
 import org.example.domain.EAddress;
+import org.example.domain.EConfig;
 import org.example.domain.ECustomer;
 import org.example.domain.EOrder;
 import org.junit.Test;
@@ -94,7 +94,20 @@ public class HzCacheFactoryTest {
     ServerCache beanCache = cacheManager.beanCache(ECustomer.class);
 
     assertThat(beanCache).isInstanceOf(TenantAwareCache.class);
-    assertThat(beanCache.unwrap(HzCache.class)).isInstanceOf(HzCache.class);
+    assertThat(beanCache.unwrap(ServerCache.class)).isInstanceOf(HzCache.class);
+
+    ServerCache queryCache = cacheManager.queryCache(ECustomer.class);
+    assertThat(queryCache).isInstanceOf(TenantAwareCache.class);
+    assertThat(queryCache.unwrap(ServerCache.class)).isInstanceOf(HzCacheFactory.HzQueryCache.class);
+
+    beanCache = cacheManager.beanCache(EConfig.class);
+
+    assertThat(beanCache).isInstanceOf(TenantAwareCache.class);
+    assertThat(beanCache.unwrap(ServerCache.class)).isInstanceOf(HzCacheFactory.HzNearCache.class);
+
+    queryCache = cacheManager.queryCache(EConfig.class);
+    assertThat(queryCache).isInstanceOf(TenantAwareCache.class);
+    assertThat(queryCache.unwrap(ServerCache.class)).isInstanceOf(HzCacheFactory.HzQueryCache.class);
 
 //    Ebean.update(ECustomer.class)
 //      .setRaw("name = 'x'")
