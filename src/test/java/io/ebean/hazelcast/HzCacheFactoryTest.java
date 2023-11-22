@@ -8,12 +8,12 @@ import io.ebean.cache.TenantAwareCache;
 import org.example.domain.EAddress;
 import org.example.domain.ECustomer;
 import org.example.domain.EOrder;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 public class HzCacheFactoryTest {

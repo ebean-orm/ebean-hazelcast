@@ -1,17 +1,15 @@
 package org.integration;
 
-
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.config.NearCacheConfig;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertNotNull;
-
 import org.example.domain.ECustomer;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ClientTest {
 
